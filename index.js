@@ -17,10 +17,25 @@ const httpServer = createServer(app);
 const io = setupSocketIO(httpServer);
 
 // Enable CORS for frontend
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_LIVE_URL,
+  'http://localhost:5173'
+].filter(Boolean); // Remove undefined
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || process.env.FRONTEND_LIVE_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like Postman or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // Add request logging middleware
