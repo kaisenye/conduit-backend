@@ -42,7 +42,7 @@ Key tables:
 ```
 npm install
 node scripts/run-migrations.js
-npm start
+npm run dev
 ```
 
 ## Required Environment Variables
@@ -59,20 +59,15 @@ npm start
 
 ## Setup
 
-1. **Clone the repo and cd into backend:**
-   ```sh
-   cd backend
-   ```
-
-2. **Install dependencies:**
+1. **Install dependencies:**
    ```sh
    npm install
    ```
 
-3. **Configure environment variables:**
+2. **Configure environment variables:**
    - Copy `.env.example` to `.env` and fill in your Supabase project details.
 
-4. **Run the server:**
+3. **Run the server:**
    ```sh
    npm run dev
    ```

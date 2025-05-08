@@ -18,7 +18,7 @@ const io = setupSocketIO(httpServer);
 
 // Enable CORS for frontend
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL || process.env.FRONTEND_LIVE_URL || 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -45,7 +45,7 @@ const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   console.log('Environment:', process.env.NODE_ENV || 'development');
-  console.log('Frontend URL:', process.env.FRONTEND_URL || 'http://localhost:5173');
+  console.log('Frontend URL:', process.env.FRONTEND_URL || process.env.FRONTEND_LIVE_URL || 'http://localhost:5173');
 });
 
 // Error handling middleware

@@ -256,7 +256,8 @@ async function processMsgWithLLM(conversationId, messageId, body, senderId, io, 
         body, 
         guestContext, 
         'GUEST', 
-        'ACKNOWLEDGMENT'
+        'ACKNOWLEDGMENT',
+        conversationId
       );
       
       console.log('Sending response to guest:', guestResponseMessage);
@@ -406,7 +407,8 @@ async function processMsgWithLLM(conversationId, messageId, body, senderId, io, 
         body, 
         vendorContext, 
         'VENDOR', 
-        'SERVICE_REQUEST'
+        'SERVICE_REQUEST',
+        conversationId
       );
       
       console.log(`Creating vendor notification in conversation ${vendorConversationId}`);
@@ -458,7 +460,8 @@ async function processMsgWithLLM(conversationId, messageId, body, senderId, io, 
         body, 
         vendorContext, 
         'VENDOR', 
-        'ACKNOWLEDGMENT'
+        'ACKNOWLEDGMENT',
+        conversationId
       );
       
       console.log('Sending response to vendor:', vendorResponseMessage);
@@ -543,7 +546,8 @@ async function processMsgWithLLM(conversationId, messageId, body, senderId, io, 
         body, 
         guestContext, 
         'GUEST', 
-        'SERVICE_UPDATE'
+        'SERVICE_UPDATE',
+        conversationId
       );
       
       console.log(`Creating guest notification in conversation ${guestConversationId}`);
@@ -594,7 +598,8 @@ async function processMsgWithLLM(conversationId, messageId, body, senderId, io, 
         body, 
         bothContext, 
         'BOTH', 
-        'GENERAL_NOTIFICATION'
+        'GENERAL_NOTIFICATION',
+        conversationId
       );
       
       // Store the notification in THIS specific conversation

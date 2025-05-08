@@ -1,6 +1,6 @@
 import openai from './openaiClient.js';
 import { extractIntent, generateBusinessResponses, generateNaturalResponse } from './functions.js';
-import { systemPrompt, userPrompt } from './promptTemplates.js';
+import { systemPrompt } from './promptTemplates.js';
 import supabase from '../db.js';
 
 export async function runLLMPipeline(body, senderId, conversationId) {
@@ -202,15 +202,49 @@ export async function runLLMPipeline(body, senderId, conversationId) {
   }
 }
 
-export async function generateNaturalResponseText(messageContent, context, targetRole, messageType) {
+export async function generateNaturalResponseText(messageContent, context, targetRole, messageType, conversationId = null) {
   try {
-    // Create system prompt for natural response generation
+    let messages = [];
+    
+    // Fetch conversation history if conversationId is provided
+    if (conversationId) {
+      const { data: conversationMessages, error } = await supabase
+        .from('messages')
+        .select(`
+          id, 
+          senderId, 
+          body, 
+          createdAt,
+          sender:users (
+            id,
+            name,
+            role
+          )
+        `)
+        .eq('conversationId', conversationId)
+        .order('createdAt', { ascending: false })
+        .limit(5);
+        
+      if (!error && conversationMessages) {
+        messages = conversationMessages
+          .reverse()
+          .map(msg => {
+            const role = msg.sender?.role || 'BUSINESS';
+            const name = msg.sender?.name || 'Business';
+            return `${role} (${name}): ${msg.body}`;
+          });
+      }
+    }
+    
+    // Create system prompt with conversation history
     const system = {
       role: 'system',
       content: `You are a helpful property management assistant. Generate a natural, conversational response to relay information between guests and service providers. 
       The response should sound human-written, not automated.
       For message type "${messageType}", create a response that is appropriate for a "${targetRole}" recipient.
-      Keep the tone professional but warm, and make sure all the important information is conveyed clearly.`
+      Keep the tone natural and warm, and make sure all the important information is conveyed clearly.
+      
+      ${messages.length > 0 ? 'Recent conversation history:\n' + messages.join('\n') : 'No conversation history available.'}`
     };
 
     // Create message with context

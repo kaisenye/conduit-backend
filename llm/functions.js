@@ -121,21 +121,6 @@ export const generateBusinessResponses = {
   },
 };
 
-export const suggestReply = {
-  name: 'suggest_reply',
-  description: 'Suggest a reply to the user message in markdown.',
-  parameters: {
-    type: 'object',
-    properties: {
-      reply: {
-        type: 'string',
-        description: 'A suggested reply in markdown format',
-      },
-    },
-    required: ['reply'],
-  },
-};
-
 export const generateNaturalResponse = {
   name: 'generate_natural_response',
   description: 'Generate a natural, human-like response for communication between guests and vendors.',
