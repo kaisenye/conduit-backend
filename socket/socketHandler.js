@@ -3,6 +3,7 @@ import supabase from '../db.js';
 import { runLLMPipeline, generateNaturalResponseText } from '../llm/pipeline.js';
 
 export function setupSocketIO(httpServer) {
+  // Setup Socket.IO server
   const io = new Server(httpServer, {
     cors: {
       origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -66,7 +67,6 @@ export function setupSocketIO(httpServer) {
         }
 
         // Ensure the sender is a participant in the conversation
-        // This is necessary for first-time senders
         const { error: participantError } = await supabase
           .from('participants')
           .upsert([{
@@ -120,7 +120,7 @@ export function setupSocketIO(httpServer) {
   return io;
 }
 
-// Separate function to process message with LLM in the background
+// Function to process message with LLM in the background
 async function processMsgWithLLM(conversationId, messageId, body, senderId, io, senderRole) {
   try {
     console.log(`Processing message ${messageId} with LLM`);
@@ -211,39 +211,39 @@ async function processMsgWithLLM(conversationId, messageId, body, senderId, io, 
     console.log('Unique participants by role:', Object.keys(uniqueParticipants));
 
     // If there are responses that should be sent automatically
-    if (responses && responses.length > 0 && action !== 'WAIT_FOR_RESPONSE') {
-      // Send automated responses based on the action type
-      for (const response of responses) {
-        // Skip responses that are not immediate
-        if (response.isImmediate === false) {
-          continue;
-        }
+    // if (responses && responses.length > 0 && action !== 'WAIT_FOR_RESPONSE') {
+    //   // Send automated responses based on the action type
+    //   for (const response of responses) {
+    //     // Skip responses that are not immediate
+    //     if (response.isImmediate === false) {
+    //       continue;
+    //     }
 
-        const targetUsers = uniqueParticipants[response.targetRole] || [];
-        console.log(`Target role: ${response.targetRole}, found ${targetUsers.length} users`);
+    //     const targetUsers = uniqueParticipants[response.targetRole] || [];
+    //     console.log(`Target role: ${response.targetRole}, found ${targetUsers.length} users`);
         
-        // For immediate business responses to the current sender
-        if (action === 'REPLY_ONLY' && targetUsers.length > 0) {
-          if (targetUsers.some(user => user.id === senderId)) {
-            await sendBusinessResponse(io, conversationId, businessUser.id, response.reply);
-            break; // Only send the first relevant response
-          }
-        }
+    //     // For immediate business responses to the current sender
+    //     if (action === 'REPLY_ONLY' && targetUsers.length > 0) {
+    //       if (targetUsers.some(user => user.id === senderId)) {
+    //         await sendBusinessResponse(io, conversationId, businessUser.id, response.reply);
+    //         break; // Only send the first relevant response
+    //       }
+    //     }
         
-        // For notifications to the other party
-        else if (action === 'NOTIFY_OTHER_PARTY' || action === 'CONFIRM_WITH_BOTH' || action === 'EMERGENCY_NOTIFICATION') {
-          // Only send if we have targets for this response
-          if (targetUsers.length > 0) {
-            await sendBusinessResponse(io, conversationId, businessUser.id, response.reply);
+    //     // For notifications to the other party
+    //     else if (action === 'NOTIFY_OTHER_PARTY' || action === 'CONFIRM_WITH_BOTH' || action === 'EMERGENCY_NOTIFICATION') {
+    //       // Only send if we have targets for this response
+    //       if (targetUsers.length > 0) {
+    //         await sendBusinessResponse(io, conversationId, businessUser.id, response.reply);
             
-            // If this is just notify, break after first notification
-            if (action === 'NOTIFY_OTHER_PARTY') {
-              break;
-            }
-          }
-        }
-      }
-    }
+    //         // If this is just notify, break after first notification
+    //         if (action === 'NOTIFY_OTHER_PARTY') {
+    //           break;
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
     // GUEST -> VENDOR communication
     // Always check if we need to notify vendor when guest sends a message

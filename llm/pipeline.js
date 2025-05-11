@@ -73,23 +73,11 @@ export async function runLLMPipeline(body, senderId, conversationId) {
 
   let currentState = conversation.conversationState || 'INITIAL_REQUEST';
 
-  // Fetch businessName for the unit (optional, fallback to unitId)
-  let businessName = conversation.unitId;
-  const { data: unit, error: unitError } = await supabase
-    .from('units')
-    .select('businessName')
-    .eq('id', conversation.unitId)
-    .single();
-  if (!unitError && unit && unit.businessName) {
-    businessName = unit.businessName;
-  }
-
   // Build OpenAI messages array with enhanced context
   const system = { 
     role: 'system', 
     content: systemPrompt({ 
       unitId: conversation.unitId, 
-      businessName, 
       senderRole 
     }) 
   };
@@ -155,31 +143,31 @@ export async function runLLMPipeline(body, senderId, conversationId) {
       .update({ conversationState })
       .eq('id', conversationId);
 
-    // Now generate appropriate business responses
-    const responseMessage = {
-      role: 'system',
-      content: `Based on analysis, this message has intent: ${intent}, conversation state: ${conversationState}, next party to contact: ${nextParty}, and next step: ${nextStep}.`
-    };
+    // // Now generate appropriate business responses
+    // const responseMessage = {
+    //   role: 'system',
+    //   content: `Based on analysis, this message has intent: ${intent}, conversation state: ${conversationState}, next party to contact: ${nextParty}, and next step: ${nextStep}.`
+    // };
 
-    const responseResponse = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      temperature: 0.7, // Higher creativity for responses
-      messages: [system, contextMessage, ...chatMessages, responseMessage],
-      functions: [generateBusinessResponses],
-      function_call: { name: 'generate_business_responses' },
-    });
+    // const businessResponse = await openai.chat.completions.create({
+    //   model: 'gpt-4o',
+    //   temperature: 0.7, // Higher creativity for responses
+    //   messages: [system, contextMessage, ...chatMessages, responseMessage],
+    //   functions: [generateBusinessResponses],
+    //   function_call: { name: 'generate_business_responses' },
+    // });
 
-    let responses = [];
-    let action = 'WAIT_FOR_RESPONSE';
+    // let responses = [];
+    // let action = 'WAIT_FOR_RESPONSE';
 
-    if (responseResponse.choices && 
-        responseResponse.choices[0].message && 
-        responseResponse.choices[0].message.function_call) {
-      const { arguments: args } = responseResponse.choices[0].message.function_call;
-      const parsed = JSON.parse(args);
-      responses = parsed.responses || [];
-      action = parsed.action || 'WAIT_FOR_RESPONSE';
-    }
+    // if (businessResponse.choices && 
+    //     businessResponse.choices[0].message && 
+    //     businessResponse.choices[0].message.function_call) {
+    //   const { arguments: args } = businessResponse.choices[0].message.function_call;
+    //   const parsed = JSON.parse(args);
+    //   responses = parsed.responses || [];
+    //   action = parsed.action || 'WAIT_FOR_RESPONSE';
+    // }
 
     return { 
       intent, 
@@ -202,7 +190,7 @@ export async function runLLMPipeline(body, senderId, conversationId) {
   }
 }
 
-export async function generateNaturalResponseText(messageContent, context, targetRole, messageType, conversationId = null) {
+export async function generateNaturalResponseText(messageContent, context, targetRole, messageType, conversationId) {
   try {
     let messages = [];
     
@@ -236,15 +224,15 @@ export async function generateNaturalResponseText(messageContent, context, targe
       }
     }
     
-    // Create system prompt with conversation history
+    // Use the same systemPrompt function with additional parameters
     const system = {
       role: 'system',
-      content: `You are a helpful property management assistant. Generate a natural, conversational response to relay information between guests and service providers. 
-      The response should sound human-written, not automated.
-      For message type "${messageType}", create a response that is appropriate for a "${targetRole}" recipient.
-      Keep the tone natural and warm, and make sure all the important information is conveyed clearly.
-      
-      ${messages.length > 0 ? 'Recent conversation history:\n' + messages.join('\n') : 'No conversation history available.'}`
+      content: systemPrompt({ 
+        unitId: conversation.unitId,
+        senderRole: targetRole,
+        messageType,
+        targetRole
+      })
     };
 
     // Create message with context
